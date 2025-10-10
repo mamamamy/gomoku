@@ -1,7 +1,7 @@
 #include "vct.h"
 
 #define VCT_RANGE 2
-#define VCT_MAX_DEPTH 15
+#define VCT_MAX_DEPTH BOARD_SIZE * BOARD_SIZE
 
 #define VCT_PATTERN_NONE 0
 #define VCT_PATTERN_FIVE_IN_A_ROW (1 << 0)
