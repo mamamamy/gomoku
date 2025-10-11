@@ -5,6 +5,7 @@
 
 typedef struct wtree wtree;
 typedef struct wtree_entry wtree_entry;
+typedef int (*wtree_foreach_callback)(wtree_entry* entry, void* user_data);
 
 struct wtree_entry {
   board bd; // key
@@ -23,5 +24,6 @@ void wtree_free(wtree *wt);
 void wtree_insert(wtree *wt, board *bd, int pos);
 void wtree_erase(wtree *wt, board *bd);
 int wtree_find(wtree *wt, board *bd);
+void wtree_foreach(wtree *wt, wtree_foreach_callback callback, void *user_data);
 
 #endif

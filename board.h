@@ -20,6 +20,8 @@ void board_remove_white(board *bd, int pos);
 int board_has_black(board *bd, int pos);
 int board_has_white(board *bd, int pos);
 int board_has_piece(board *bd, int pos);
+uint64_t board_hash(board *bd);
+int board_equal(board *a, board *b);
 
 void board_to_xy(int pos, int *x, int *y);
 int board_to_pos(int x, int y);

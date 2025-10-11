@@ -35,6 +35,24 @@ int board_has_piece(board *bd, int pos) {
   return board_has_black(bd, pos) || board_has_white(bd, pos);
 }
 
+uint64_t board_hash(board *bd) {
+  uint64_t h = 0xAAAAAAAA;
+  for (int i = 0; i < 8; ++i) {
+    h = h * 31 + bd->b[i];
+    h = h * 31 + bd->w[i];
+  }
+  return h ^ (h >> 32);
+}
+
+int board_equal(board *a, board *b) {
+  for (int i = 0; i < 8; ++i) {
+    if (a->b[i] != b->b[i] || a->w[i] != b->w[i]) {
+      return 0;
+    }
+  }
+  return 1;
+}
+
 void board_to_xy(int pos, int *x, int *y) {
   *x = pos % BOARD_SIZE;
   *y = pos / BOARD_SIZE;
