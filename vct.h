@@ -3,6 +3,6 @@
 
 #include "board.h"
 
-int vc_black(board *bd);
+int vct(board *bd);
 
 #endif

@@ -31,7 +31,7 @@
 // X _ O O _ O _ X
 // X _ O O O _ _ X
 
-static int check_pattern(board *bd, int pos) {
+static int board_check_pattern(board *bd, int pos) {
   int is_black = board_has_black(bd, pos);
   int is_white = board_has_white(bd, pos);
   if (!is_black && !is_white) {
@@ -622,7 +622,7 @@ static int vct_white(board *bd, int curr_depth, int max_depth, int *has_vct) {
         }
         checked[new_pos] = 1;
         board_put_white(bd, new_pos);
-        pattern = check_pattern(bd, new_pos);
+        pattern = board_check_pattern(bd, new_pos);
         board_remove_white(bd, new_pos);
         if (pattern & VCT_PATTERN_FIVE_IN_A_ROW) {
           return new_pos;
@@ -636,7 +636,7 @@ static int vct_white(board *bd, int curr_depth, int max_depth, int *has_vct) {
           }
         }
         board_put_black(bd, new_pos);
-        pattern = check_pattern(bd, new_pos);
+        pattern = board_check_pattern(bd, new_pos);
         board_remove_black(bd, new_pos);
         if (pattern & (VCT_PATTERN_LIVE_FOUR | VCT_PATTERN_FIVE_IN_A_ROW)) {
           board_put_white(bd, new_pos);
@@ -679,7 +679,7 @@ static int vct_black(board *bd, int curr_depth, int max_depth, int *has_vct) {
         }
         checked[new_pos] = 1;
         board_put_black(bd, new_pos);
-        pattern = check_pattern(bd, new_pos);
+        pattern = board_check_pattern(bd, new_pos);
         board_remove_black(bd, new_pos);
         if (pattern & VCT_PATTERN_FIVE_IN_A_ROW) {
           return new_pos;
@@ -697,7 +697,7 @@ static int vct_black(board *bd, int curr_depth, int max_depth, int *has_vct) {
           }
         }
         board_put_white(bd, new_pos);
-        pattern = check_pattern(bd, new_pos);
+        pattern = board_check_pattern(bd, new_pos);
         board_remove_white(bd, new_pos);
         if ((pattern & (VCT_PATTERN_LIVE_FOUR | VCT_PATTERN_FIVE_IN_A_ROW)) && curr_depth < max_depth) {
           board_put_black(bd, new_pos);
