@@ -2,9 +2,10 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <inttypes.h>
 
-#define WTREE_FILE_PATH "data/wtree_%d.bin"
-#define WTREE_FILE_PATH_MAX_LEN 19
+#define WTREE_FILE_PATH "data/wtree_%"PRIu64".bin"
+#define WTREE_FILE_PATH_MAX_LEN 36
 
 typedef struct board8 board8;
 
@@ -75,9 +76,9 @@ static int wtree_entry_save_to_file(const wtree_entry *entry, void *user_data) {
   return 1;
 }
 
-void save_to_file(const wtree *wt, int depth) {
+void save_to_file(const wtree *wt, uint64_t id) {
   char filename[WTREE_FILE_PATH_MAX_LEN];
-  snprintf(filename, WTREE_FILE_PATH_MAX_LEN, WTREE_FILE_PATH, depth);
+  snprintf(filename, WTREE_FILE_PATH_MAX_LEN, WTREE_FILE_PATH, id);
   FILE* f = fopen(filename, "wb");
   if (f == NULL) {
     fprintf(stderr, "Failed to open the file%s\n", filename);
@@ -88,10 +89,10 @@ void save_to_file(const wtree *wt, int depth) {
   fclose(f);
 }
 
-void load_from_file(wtree *wt, int depth) {
+void load_from_file(wtree *wt, uint64_t id) {
   wtree_clear(wt);
   char filename[WTREE_FILE_PATH_MAX_LEN];
-  snprintf(filename, WTREE_FILE_PATH_MAX_LEN, WTREE_FILE_PATH, depth);
+  snprintf(filename, WTREE_FILE_PATH_MAX_LEN, WTREE_FILE_PATH, id);
   FILE* f = fopen(filename, "rb");
   if (f == NULL) {
     fprintf(stderr, "Failed to open the file%s\n", filename);

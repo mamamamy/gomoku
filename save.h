@@ -3,7 +3,7 @@
 
 #include "wtree.h"
 
-void save_to_file(const wtree *wt, int depth);
-void load_from_file(wtree *wt, int depth);
+void save_to_file(const wtree *wt, uint64_t id);
+void load_from_file(wtree *wt, uint64_t id);
 
 #endif

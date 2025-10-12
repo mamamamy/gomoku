@@ -5,8 +5,10 @@
 #include "bitmap256.h"
 
 #include <stdio.h>
+#include <inttypes.h>
 
 #define TEST_BLACK_RANGE 3
+#define THREAD_COUNT 20
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #define min(a, b) ((a) < (b) ? (a) : (b))
@@ -124,7 +126,8 @@ static int test_black(wtree *wt, board *bd, int curr_depth, int max_depth) {
           if (test_white(wt, bd, curr_depth + 1, max_depth) == -1) {
             board_remove_black(bd, new_pos);
             wtree_insert(wt, bd, new_pos);
-            printf("Found a winning node\n");
+            printf("Found a winning node. Node ID: %"PRIu64"\n", wtree_size(wt));
+            save_to_file(&wt, wt->item_num);
             return new_pos;
           }
         }
@@ -143,10 +146,10 @@ void main_while() {
   board_init(&bd);
   wtree_insert(&wt, &bd, 112);
   board_put_black(&bd, 112);
+  load_from_file(&wt, 1);
   for (int iter_depth = 3; iter_depth <= BOARD_SIZE * BOARD_SIZE; iter_depth += 2) {
     printf("Current max depth: %d\n", iter_depth);
     test_white(&wt, &bd, 2, iter_depth);
-    save_to_file(&wt, iter_depth);
   }
   wtree_free(&wt);
   printf("Build completed\n");
