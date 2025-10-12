@@ -23,6 +23,11 @@ void board_remove_white(board *bd, int pos) {
   bd->w[pos / 32] &= ~(1 << (pos % 32));
 }
 
+void board_remove_piece(board *bd, int pos) {
+  board_remove_black(bd, pos);
+  board_remove_white(bd, pos);
+}
+
 int board_has_black(const board *bd, int pos) {
   return bd->b[pos / 32] & (1 << (pos % 32));
 }
@@ -33,6 +38,75 @@ int board_has_white(const board *bd, int pos) {
 
 int board_has_piece(const board *bd, int pos) {
   return board_has_black(bd, pos) || board_has_white(bd, pos);
+}
+
+void board_flip_horizontal(board* bd) {
+  for (int y = 0; y < BOARD_SIZE; ++y) {
+    for (int x = 0; x < BOARD_SIZE / 2; ++x) {
+      int mirror_x = BOARD_SIZE - 1 - x;
+      int pos_a = board_to_pos(x, y);
+      int pos_b = board_to_pos(mirror_x, y);
+      int is_black_a = board_has_black(bd, pos_a);
+      int is_white_a = board_has_white(bd, pos_a);
+      int is_black_b = board_has_black(bd, pos_b);
+      int is_white_b = board_has_white(bd, pos_b);
+      board_remove_piece(bd, pos_a);
+      board_remove_piece(bd, pos_b);
+      if (is_black_a) {
+        board_put_black(bd, pos_b);
+      } else if (is_white_a) {
+        board_put_white(bd, pos_b);
+      }
+      if (is_black_b) {
+        board_put_black(bd, pos_a);
+      } else if (is_white_b) {
+        board_put_white(bd, pos_a);
+      }
+    }
+  }
+}
+
+void board_rotate_clockwise_90(board* bd) {
+  for (int y = 0; y < BOARD_SIZE / 2; ++y) {
+    for (int x = 0; x < (BOARD_SIZE + 1) / 2; ++x) {
+      int pos_a = board_to_pos(x, y);
+      int pos_b = board_to_pos(y, BOARD_SIZE - 1 - x);
+      int pos_c = board_to_pos(BOARD_SIZE - 1 - x, BOARD_SIZE - 1 - y);
+      int pos_d = board_to_pos(BOARD_SIZE - 1 - y, x);
+      int is_black_a = board_has_black(bd, pos_a);
+      int is_white_a = board_has_white(bd, pos_a);
+      int is_black_b = board_has_black(bd, pos_b);
+      int is_white_b = board_has_white(bd, pos_b);
+      int is_black_c = board_has_black(bd, pos_c);
+      int is_white_c = board_has_white(bd, pos_c);
+      int is_black_d = board_has_black(bd, pos_d);
+      int is_white_d = board_has_white(bd, pos_d);
+      board_remove_piece(bd, pos_a);
+      board_remove_piece(bd, pos_b);
+      board_remove_piece(bd, pos_c);
+      board_remove_piece(bd, pos_d);
+      if (is_black_b) {
+        board_put_black(bd, pos_a);
+      } else if (is_white_b) {
+        board_put_white(bd, pos_a);
+      }
+      if (is_black_c) {
+        board_put_black(bd, pos_b);
+      } else if (is_white_c) {
+        board_put_white(bd, pos_b);
+      }
+      if (is_black_d) {
+        board_put_black(bd, pos_c);
+      } else if (is_white_d) {
+        board_put_white(bd, pos_c);
+      }
+      if (is_black_a) {
+        board_put_black(bd, pos_d);
+      } else if (is_white_a) {
+        board_put_white(bd, pos_d);
+      }
+    }
+  }
 }
 
 uint64_t board_hash(const board *bd) {

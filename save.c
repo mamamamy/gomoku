@@ -76,7 +76,7 @@ static int wtree_entry_save_to_file(const wtree_entry *entry, void *user_data) {
   return 1;
 }
 
-void save_to_file(const wtree *wt, uint64_t id) {
+void save_to_file(wtree *wt, uint64_t id) {
   char filename[WTREE_FILE_PATH_MAX_LEN];
   snprintf(filename, WTREE_FILE_PATH_MAX_LEN, WTREE_FILE_PATH, id);
   FILE* f = fopen(filename, "wb");

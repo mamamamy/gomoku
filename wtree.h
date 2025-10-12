@@ -3,6 +3,8 @@
 
 #include "board.h"
 
+#include <pthread.h>
+
 typedef struct wtree wtree;
 typedef struct wtree_entry wtree_entry;
 typedef int (*wtree_foreach_callback)(const wtree_entry* entry, void* user_data);
@@ -17,15 +19,16 @@ struct wtree {
   wtree_entry **buckets;
   uint64_t item_num;
   uint64_t bucket_num;
+  pthread_rwlock_t lock;
 };
 
 void wtree_init(wtree *wt);
 void wtree_free(wtree *wt);
 void wtree_clear(wtree *wt);
-uint64_t wtree_size(const wtree *wt);
+uint64_t wtree_size(wtree *wt);
 void wtree_insert(wtree *wt, const board *bd, int pos);
 void wtree_erase(wtree *wt, const board *bd);
-int wtree_find(const wtree *wt, const board *bd);
-void wtree_foreach(const wtree *wt, wtree_foreach_callback callback, void *user_data);
+int wtree_find(wtree *wt, const board *bd);
+void wtree_foreach(wtree *wt, wtree_foreach_callback callback, void *user_data);
 
 #endif

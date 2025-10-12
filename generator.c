@@ -6,6 +6,7 @@
 
 #include <stdio.h>
 #include <inttypes.h>
+#include <pthread.h>
 
 #define TEST_BLACK_RANGE 3
 #define THREAD_COUNT 20
@@ -77,22 +78,28 @@ static int test_black(wtree *wt, board *bd, int curr_depth, int max_depth);
 static int test_white(wtree *wt, board *bd, int curr_depth, int max_depth) {
   for (int pos = 0; pos < BOARD_SIZE * BOARD_SIZE; ++pos) {
     board_put_white(bd, pos);
-    if (wtree_find(wt, bd) != -1) {
-      board_remove_white(bd, pos);
-      continue;
+    board bd_tmp = *bd;
+    for (int i = 0; i < 2; ++i) {
+      for (int j = 0; j < 4; ++j) {
+        if (wtree_find(wt, &bd_tmp) != -1) {
+          goto label_continue;
+        }
+        board_rotate_clockwise_90(&bd_tmp);
+      }
+      board_flip_horizontal(&bd_tmp);
     }
     if (check_win(bd, pos)) {
       board_remove_white(bd, pos);
       return pos;
     }
     if (vct(bd) != -1) {
-      board_remove_white(bd, pos);
-      continue;
+      goto label_continue;
     }
     if (test_black(wt, bd, curr_depth + 1, max_depth) == -1) {
       board_remove_white(bd, pos);
       return pos;
     }
+label_continue:
     board_remove_white(bd, pos);
   }
   return -1;
@@ -126,8 +133,7 @@ static int test_black(wtree *wt, board *bd, int curr_depth, int max_depth) {
           if (test_white(wt, bd, curr_depth + 1, max_depth) == -1) {
             board_remove_black(bd, new_pos);
             wtree_insert(wt, bd, new_pos);
-            printf("Found a winning node. Node ID: %"PRIu64"\n", wtree_size(wt));
-            save_to_file(&wt, wt->item_num);
+            printf("Found a winning node.\nWin tree size: %"PRIu64"\n", wtree_size(wt));
             return new_pos;
           }
         }
@@ -138,18 +144,49 @@ static int test_black(wtree *wt, board *bd, int curr_depth, int max_depth) {
   return -1;
 }
 
+typedef struct thread_arg thread_arg;
+
+struct thread_arg {
+  wtree *wt;
+  board *bd;
+  int max_depth;
+};
+
+void *thread_func(void *arg) {
+  thread_arg *ta = (thread_arg *)arg;
+  test_black(ta->wt, ta->bd, 3, ta->max_depth);
+  return NULL;
+}
+
 void main_while() {
   printf("Build started\n");
   wtree wt;
   wtree_init(&wt);
-  board bd;
-  board_init(&bd);
-  wtree_insert(&wt, &bd, 112);
-  board_put_black(&bd, 112);
   load_from_file(&wt, 1);
+  pthread_t threads[THREAD_COUNT];
+  board boards[THREAD_COUNT];
+  thread_arg args[THREAD_COUNT];
   for (int iter_depth = 3; iter_depth <= BOARD_SIZE * BOARD_SIZE; iter_depth += 2) {
     printf("Current max depth: %d\n", iter_depth);
-    test_white(&wt, &bd, 2, iter_depth);
+    for (int pos = 0; pos < BOARD_SIZE * BOARD_SIZE;) {
+      int thread_num = 0;
+      for (int i = 0; i < THREAD_COUNT && pos < BOARD_SIZE * BOARD_SIZE; ++i, ++pos) {
+        board_init(&boards[i]);
+        board_put_black(&boards[i], 112);
+        board_put_white(&boards[i], pos);
+        args[i].bd = &boards[i];
+        args[i].max_depth = iter_depth;
+        args[i].wt = &wt;
+        ++thread_num;
+      }
+      for (int i = 0; i < thread_num; ++i) {
+        pthread_create(&threads[i], NULL, thread_func, &args[i]);
+      }
+      for (int i = 0; i < thread_num; ++i) {
+        pthread_join(threads[i], NULL);
+      }
+      save_to_file(&wt, iter_depth);
+    }
   }
   wtree_free(&wt);
   printf("Build completed\n");
