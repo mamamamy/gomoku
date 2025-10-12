@@ -15,5 +15,5 @@ int bitmap256_test(const bitmap256 *bm, int pos) {
 }
 
 void bitmap256_reset(bitmap256 *bm, int pos) {
-  return bm->data[(pos) / 32] &= ~(1 << ((pos) % 32));
+  bm->data[(pos) / 32] &= ~(1 << ((pos) % 32));
 }

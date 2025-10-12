@@ -8,6 +8,9 @@
 
 #define TEST_BLACK_RANGE 3
 
+#define max(a, b) ((a) > (b) ? (a) : (b))
+#define min(a, b) ((a) < (b) ? (a) : (b))
+
 static int check_win(board *bd, int pos) {
   int is_black = board_has_black(bd, pos);
   int is_white = board_has_white(bd, pos);
@@ -80,7 +83,13 @@ static int test_white(wtree *wt, board *bd, int curr_depth, int max_depth) {
       board_remove_white(bd, pos);
       return pos;
     }
-    test_black(wt, bd, curr_depth + 1, max_depth);
+    if (vct(bd) != -1) {
+      continue;
+    }
+    if (test_black(wt, bd, curr_depth + 1, max_depth) == -1) {
+      board_remove_white(bd, pos);
+      return pos;
+    }
     board_remove_white(bd, pos);
   }
   return -1;
@@ -99,7 +108,6 @@ static int test_black(wtree *wt, board *bd, int curr_depth, int max_depth) {
     int min_y = max(y - TEST_BLACK_RANGE, 0);
     int max_x = min(x + TEST_BLACK_RANGE, BOARD_SIZE - 1);
     int max_y = min(y + TEST_BLACK_RANGE, BOARD_SIZE - 1);
-    int pattern;
     for (int new_x = min_x; new_x <= max_x; ++new_x) {
       for (int new_y = min_y; new_y <= max_y; ++new_y) {
         int new_pos = board_to_pos(new_x, new_y);
@@ -111,7 +119,13 @@ static int test_black(wtree *wt, board *bd, int curr_depth, int max_depth) {
           continue;
         }
         board_put_black(bd, new_pos);
-        int result = test_white(wt, bd, curr_depth + 1, max_depth);
+        if (curr_depth < max_depth) {
+          if (test_white(wt, bd, curr_depth + 1, max_depth) == -1) {
+            board_remove_black(bd, new_pos);
+            wtree_insert(wt, bd, new_pos);
+            return new_pos;
+          }
+        }
         board_remove_black(bd, new_pos);
       }
     }
@@ -127,7 +141,7 @@ void main_while() {
   board_init(&bd);
   wtree_insert(&wt, &bd, 112);
   board_put_black(&bd, 112);
-  for (int iter_depth = 3; iter_depth <= 3; iter_depth += 2) {
+  for (int iter_depth = 3; iter_depth <= 7; iter_depth += 2) {
     printf("Current max depth: %d\n", iter_depth);
     test_white(&wt, &bd, 2, iter_depth);
     save_to_file(&wt, iter_depth);
