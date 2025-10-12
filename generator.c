@@ -9,7 +9,7 @@
 #include <pthread.h>
 
 #define TEST_BLACK_RANGE 3
-#define THREAD_COUNT 20
+#define THREAD_COUNT 30
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #define min(a, b) ((a) < (b) ? (a) : (b))
@@ -153,11 +153,13 @@ struct thread_arg {
   wtree *wt;
   board *bd;
   int max_depth;
+  int id;
 };
 
 void *thread_func(void *arg) {
   thread_arg *ta = (thread_arg *)arg;
   test_black(ta->wt, ta->bd, 3, ta->max_depth);
+  printf("Thread %d down\n", ta->id);
   return NULL;
 }
 
@@ -180,6 +182,7 @@ void main_while() {
         args[i].bd = &boards[i];
         args[i].max_depth = iter_depth;
         args[i].wt = &wt;
+        args[i].id = i;
         ++thread_num;
       }
       for (int i = 0; i < thread_num; ++i) {
@@ -189,6 +192,7 @@ void main_while() {
         pthread_join(threads[i], NULL);
       }
       printf("Save to file wtree_%d.bin\n", iter_depth);
+      printf("Win tree size: %"PRIu64"\n", wtree_size(&wt));
       save_to_file(&wt, iter_depth);
     }
   }
