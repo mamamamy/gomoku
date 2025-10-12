@@ -63,13 +63,13 @@ static int wtree_entry_save_to_file(const wtree_entry *entry, void *user_data) {
   size_t wn;
   wn = fwrite(bd8.data, sizeof(uint8_t), 64, f);
   if (wn != 64) {
-    fprintf(stderr, "写入失败\n");
+    fprintf(stderr, "Write failed\n");
     exit(EXIT_FAILURE);
   }
   uint8_t pos_uint8 = (uint8_t)(entry->pos);
   wn = fwrite(&pos_uint8, sizeof(uint8_t), 1, f);
   if (wn != 1) {
-    fprintf(stderr, "写入失败\n");
+    fprintf(stderr, "Write failed\n");
     exit(EXIT_FAILURE);
   }
   return 1;
@@ -80,7 +80,7 @@ void save_to_file(const wtree *wt, int depth) {
   snprintf(filename, WTREE_FILE_PATH_MAX_LEN, WTREE_FILE_PATH, depth);
   FILE* f = fopen(filename, "wb");
   if (f == NULL) {
-    fprintf(stderr, "无法打开文件%s\n", filename);
+    fprintf(stderr, "Failed to open the file%s\n", filename);
     exit(EXIT_FAILURE);
   }
   wtree_foreach(wt, wtree_entry_save_to_file, f);
@@ -94,7 +94,7 @@ void load_from_file(wtree *wt, int depth) {
   snprintf(filename, WTREE_FILE_PATH_MAX_LEN, WTREE_FILE_PATH, depth);
   FILE* f = fopen(filename, "rb");
   if (f == NULL) {
-    fprintf(stderr, "无法打开文件%s\n", filename);
+    fprintf(stderr, "Failed to open the file%s\n", filename);
     exit(EXIT_FAILURE);
   }
   board bd;
@@ -108,12 +108,12 @@ void load_from_file(wtree *wt, int depth) {
       break;
     }
     if (rn != 64) {
-      fprintf(stderr, "读取失败\n");
+      fprintf(stderr, "Read failed\n");
       exit(EXIT_FAILURE);
     }
     rn = fread(&pos_uint8, sizeof(uint8_t), 1, f);
     if (rn != 1) {
-      fprintf(stderr, "读取失败\n");
+      fprintf(stderr, "Read failed\n");
       exit(EXIT_FAILURE);
     }
     board8_to_board(&bd8, &bd);

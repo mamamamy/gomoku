@@ -1,5 +1,7 @@
 #include "vct.h"
 
+#include "bitmap256.h"
+
 #define VCT_RANGE 2
 #define VCT_MAX_DEPTH 13
 
@@ -31,7 +33,7 @@
 // X _ O O _ O _ X
 // X _ O O O _ _ X
 
-static int board_check_pattern(board *bd, int pos) {
+static int check_pattern(board *bd, int pos) {
   int is_black = board_has_black(bd, pos);
   int is_white = board_has_white(bd, pos);
   if (!is_black && !is_white) {
@@ -596,10 +598,8 @@ static int vct_white(board *bd, int curr_depth, int max_depth, int *has_vct);
 static int vct_black(board *bd, int curr_depth, int max_depth, int *has_vct);
 
 static int vct_white(board *bd, int curr_depth, int max_depth, int *has_vct) {
-  int checked[BOARD_SIZE * BOARD_SIZE];
-  for (int i = 0; i < BOARD_SIZE * BOARD_SIZE; ++i) {
-    checked[i] = 0;
-  }
+  bitmap256 checked;
+  bitmap256_init(&checked);
   for (int pos = 0; pos < BOARD_SIZE * BOARD_SIZE; ++pos) {
     if (!board_has_piece(bd, pos)) {
       continue;
@@ -614,15 +614,15 @@ static int vct_white(board *bd, int curr_depth, int max_depth, int *has_vct) {
     for (int new_x = min_x; new_x <= max_x; ++new_x) {
       for (int new_y = min_y; new_y <= max_y; ++new_y) {
         int new_pos = board_to_pos(new_x, new_y);
+        if (bitmap256_test(&checked, new_pos)) {
+          continue;
+        }
+        bitmap256_set(&checked, new_pos);
         if (board_has_piece(bd, new_pos)) {
           continue;
         }
-        if (checked[new_pos]) {
-          continue;
-        }
-        checked[new_pos] = 1;
         board_put_white(bd, new_pos);
-        pattern = board_check_pattern(bd, new_pos);
+        pattern = check_pattern(bd, new_pos);
         board_remove_white(bd, new_pos);
         if (pattern & VCT_PATTERN_FIVE_IN_A_ROW) {
           return new_pos;
@@ -636,7 +636,7 @@ static int vct_white(board *bd, int curr_depth, int max_depth, int *has_vct) {
           }
         }
         board_put_black(bd, new_pos);
-        pattern = board_check_pattern(bd, new_pos);
+        pattern = check_pattern(bd, new_pos);
         board_remove_black(bd, new_pos);
         if (pattern & (VCT_PATTERN_LIVE_FOUR | VCT_PATTERN_FIVE_IN_A_ROW)) {
           board_put_white(bd, new_pos);
@@ -653,10 +653,8 @@ static int vct_white(board *bd, int curr_depth, int max_depth, int *has_vct) {
 }
 
 static int vct_black(board *bd, int curr_depth, int max_depth, int *has_vct) {
-  int checked[BOARD_SIZE * BOARD_SIZE];
-  for (int i = 0; i < BOARD_SIZE * BOARD_SIZE; ++i) {
-    checked[i] = 0;
-  }
+  bitmap256 checked;
+  bitmap256_init(&checked);
   for (int pos = 0; pos < BOARD_SIZE * BOARD_SIZE; ++pos) {
     if (!board_has_piece(bd, pos)) {
       continue;
@@ -671,15 +669,15 @@ static int vct_black(board *bd, int curr_depth, int max_depth, int *has_vct) {
     for (int new_x = min_x; new_x <= max_x; ++new_x) {
       for (int new_y = min_y; new_y <= max_y; ++new_y) {
         int new_pos = board_to_pos(new_x, new_y);
+        if (bitmap256_test(&checked, new_pos)) {
+          continue;
+        }
+        bitmap256_set(&checked, new_pos);
         if (board_has_piece(bd, new_pos)) {
           continue;
         }
-        if (checked[new_pos]) {
-          continue;
-        }
-        checked[new_pos] = 1;
         board_put_black(bd, new_pos);
-        pattern = board_check_pattern(bd, new_pos);
+        pattern = check_pattern(bd, new_pos);
         board_remove_black(bd, new_pos);
         if (pattern & VCT_PATTERN_FIVE_IN_A_ROW) {
           return new_pos;
@@ -697,7 +695,7 @@ static int vct_black(board *bd, int curr_depth, int max_depth, int *has_vct) {
           }
         }
         board_put_white(bd, new_pos);
-        pattern = board_check_pattern(bd, new_pos);
+        pattern = check_pattern(bd, new_pos);
         board_remove_white(bd, new_pos);
         if ((pattern & (VCT_PATTERN_LIVE_FOUR | VCT_PATTERN_FIVE_IN_A_ROW)) && curr_depth < max_depth) {
           board_put_black(bd, new_pos);
