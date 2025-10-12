@@ -172,8 +172,8 @@ void main_while() {
   board boards[THREAD_COUNT];
   thread_arg args[THREAD_COUNT];
   for (int iter_depth = 3; iter_depth <= BOARD_SIZE * BOARD_SIZE; iter_depth += 2) {
-    printf("Current max depth: %d\n", iter_depth);
     for (int pos = 0; pos < BOARD_SIZE * BOARD_SIZE;) {
+      printf("Current max depth: %d\n", iter_depth);
       int thread_num = 0;
       for (int i = 0; i < THREAD_COUNT && pos < BOARD_SIZE * BOARD_SIZE; ++i, ++pos) {
         board_init(&boards[i]);
