@@ -23,19 +23,19 @@ void board_remove_white(board *bd, int pos) {
   bd->w[pos / 32] &= ~(1 << (pos % 32));
 }
 
-int board_has_black(board *bd, int pos) {
+int board_has_black(const board *bd, int pos) {
   return bd->b[pos / 32] & (1 << (pos % 32));
 }
 
-int board_has_white(board *bd, int pos) {
+int board_has_white(const board *bd, int pos) {
   return bd->w[pos / 32] & (1 << (pos % 32));
 }
 
-int board_has_piece(board *bd, int pos) {
+int board_has_piece(const board *bd, int pos) {
   return board_has_black(bd, pos) || board_has_white(bd, pos);
 }
 
-uint64_t board_hash(board *bd) {
+uint64_t board_hash(const board *bd) {
   uint64_t h = 0xAAAAAAAA;
   for (int i = 0; i < 8; ++i) {
     h = h * 31 + bd->b[i];
@@ -44,7 +44,7 @@ uint64_t board_hash(board *bd) {
   return h ^ (h >> 32);
 }
 
-int board_equal(board *a, board *b) {
+int board_equal(const board *a, const board *b) {
   for (int i = 0; i < 8; ++i) {
     if (a->b[i] != b->b[i] || a->w[i] != b->w[i]) {
       return 0;

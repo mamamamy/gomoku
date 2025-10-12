@@ -52,15 +52,16 @@ void wtree_clear(wtree *wt) {
       wtree_memory_free(entry);
       entry = next;
     }
+    wt->buckets[i] = NULL;
   }
   wt->item_num = 0;
 }
 
-uint64_t wtree_size(wtree *wt) {
+uint64_t wtree_size(const wtree *wt) {
   return wt->item_num;
 }
 
-void wtree_insert(wtree *wt, board *bd, int pos) {
+void wtree_insert(wtree *wt, const board *bd, int pos) {
   if (wt->item_num >= wt->bucket_num) {
     wtree_resize(wt);
   }
@@ -81,7 +82,7 @@ void wtree_insert(wtree *wt, board *bd, int pos) {
   ++wt->item_num;
 }
 
-void wtree_erase(wtree *wt, board *bd) {
+void wtree_erase(wtree *wt, const board *bd) {
   uint64_t bucket_index = board_hash(bd) % wt->bucket_num;
   wtree_entry *entry = wt->buckets[bucket_index];
   wtree_entry *prev = NULL;
@@ -101,7 +102,7 @@ void wtree_erase(wtree *wt, board *bd) {
   }
 }
 
-int wtree_find(wtree *wt, board *bd) {
+int wtree_find(const wtree *wt, const board *bd) {
   uint64_t bucket_index = board_hash(bd) % wt->bucket_num;
   wtree_entry *entry = wt->buckets[bucket_index];
   while (entry != NULL) {
@@ -113,7 +114,7 @@ int wtree_find(wtree *wt, board *bd) {
   return -1;
 }
 
-void wtree_foreach(wtree *wt, wtree_foreach_callback callback, void *user_data) {
+void wtree_foreach(const wtree *wt, wtree_foreach_callback callback, void *user_data) {
   for (uint64_t i = 0; i < wt->bucket_num; ++i) {
     wtree_entry *entry = wt->buckets[i];
     while (entry != NULL) {
