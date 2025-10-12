@@ -191,8 +191,8 @@ void main_while() {
       for (int i = 0; i < thread_num; ++i) {
         pthread_join(threads[i], NULL);
       }
-      printf("Save to file wtree_%d.bin\n", iter_depth);
       printf("Win tree size: %"PRIu64"\n", wtree_size(&wt));
+      printf("Save to file wtree_%d.bin\n", iter_depth);
       save_to_file(&wt, iter_depth);
     }
   }
