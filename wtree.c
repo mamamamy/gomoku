@@ -2,14 +2,14 @@
 
 #include <stdlib.h>
 
-#define wtree_malloc malloc
-#define wtree_free free
+#define wtree_memory_alloc malloc
+#define wtree_memory_free free
 
 #define WTREE_BUKCET_NUM 16
 
 static void wtree_resize(wtree *wt) {
   uint64_t new_bucket_num = wt->bucket_num << 1;
-  wtree_entry **new_buckets = wtree_malloc(sizeof(new_buckets) * new_bucket_num);
+  wtree_entry **new_buckets = wtree_memory_alloc(sizeof(wtree_entry *) * new_bucket_num);
   for (uint64_t i = 0; i < new_bucket_num; ++i) {
     new_buckets[i] = NULL;
   }
@@ -20,28 +20,44 @@ static void wtree_resize(wtree *wt) {
       next = entry->next;
       uint64_t bucket_index = board_hash(&entry->bd) % new_bucket_num;
       entry->next = new_buckets[bucket_index];
-      if (new_buckets[bucket_index] == NULL) {
-        new_buckets[bucket_index] = entry;
-      }
+      new_buckets[bucket_index] = entry;
       entry = next;
     }
   }
-  wtree_free(wt->buckets);
+  wtree_memory_free(wt->buckets);
   wt->bucket_num = new_bucket_num;
   wt->buckets = new_buckets;
 }
 
 void wtree_init(wtree *wt) {
   wt->bucket_num = WTREE_BUKCET_NUM;
-  wt->buckets = wtree_malloc(sizeof(wt->buckets) * wt->bucket_num);
+  wt->buckets = wtree_memory_alloc(sizeof(wtree_entry *) * wt->bucket_num);
   wt->item_num = 0;
   for (uint64_t i = 0; i < wt->bucket_num; ++i) {
     wt->buckets[i] = NULL;
   }
 }
 
+void wtree_free(wtree *wt) {
+  wtree_clear(wt);
+  wtree_memory_free(wt->buckets);
+}
+
 void wtree_clear(wtree *wt) {
-  wtree_free(wt->buckets);
+  for (uint64_t i = 0; i < wt->bucket_num; ++i) {
+    wtree_entry *entry = wt->buckets[i];
+    wtree_entry *next;
+    while (entry != NULL) {
+      next = entry->next;
+      wtree_memory_free(entry);
+      entry = next;
+    }
+  }
+  wt->item_num = 0;
+}
+
+uint64_t wtree_size(wtree *wt) {
+  return wt->item_num;
 }
 
 void wtree_insert(wtree *wt, board *bd, int pos) {
@@ -57,12 +73,12 @@ void wtree_insert(wtree *wt, board *bd, int pos) {
     }
     entry = entry->next;
   }
-  entry = wtree_malloc(sizeof(entry));
+  entry = wtree_memory_alloc(sizeof(wtree_entry));
   entry->bd = *bd;
+  entry->pos = pos;
   entry->next = wt->buckets[bucket_index];
-  if (wt->buckets[bucket_index] == NULL) {
-    wt->buckets[bucket_index] = entry;
-  }
+  wt->buckets[bucket_index] = entry;
+  ++wt->item_num;
 }
 
 void wtree_erase(wtree *wt, board *bd) {
@@ -76,7 +92,9 @@ void wtree_erase(wtree *wt, board *bd) {
       } else {
         wt->buckets[bucket_index] = entry->next;
       }
-      wtree_free(entry);
+      wtree_memory_free(entry);
+      --wt->item_num;
+      return;
     }
     prev = entry;
     entry = entry->next;

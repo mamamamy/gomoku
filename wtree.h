@@ -21,6 +21,8 @@ struct wtree {
 
 void wtree_init(wtree *wt);
 void wtree_free(wtree *wt);
+void wtree_clear(wtree *wt);
+uint64_t wtree_size(wtree *wt);
 void wtree_insert(wtree *wt, board *bd, int pos);
 void wtree_erase(wtree *wt, board *bd);
 int wtree_find(wtree *wt, board *bd);
