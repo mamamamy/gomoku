@@ -84,6 +84,7 @@ static int test_white(wtree *wt, board *bd, int curr_depth, int max_depth) {
       return pos;
     }
     if (vct(bd) != -1) {
+      board_remove_white(bd, pos);
       continue;
     }
     if (test_black(wt, bd, curr_depth + 1, max_depth) == -1) {
@@ -123,6 +124,7 @@ static int test_black(wtree *wt, board *bd, int curr_depth, int max_depth) {
           if (test_white(wt, bd, curr_depth + 1, max_depth) == -1) {
             board_remove_black(bd, new_pos);
             wtree_insert(wt, bd, new_pos);
+            printf("Found a winning node\n");
             return new_pos;
           }
         }
@@ -141,7 +143,7 @@ void main_while() {
   board_init(&bd);
   wtree_insert(&wt, &bd, 112);
   board_put_black(&bd, 112);
-  for (int iter_depth = 3; iter_depth <= 7; iter_depth += 2) {
+  for (int iter_depth = 3; iter_depth <= BOARD_SIZE * BOARD_SIZE; iter_depth += 2) {
     printf("Current max depth: %d\n", iter_depth);
     test_white(&wt, &bd, 2, iter_depth);
     save_to_file(&wt, iter_depth);
