@@ -78,6 +78,9 @@ static int test_black(wtree *wt, board *bd, int curr_depth, int max_depth);
 static int test_white(wtree *wt, board *bd, int curr_depth, int max_depth) {
   for (int pos = 0; pos < BOARD_SIZE * BOARD_SIZE; ++pos) {
     board_put_white(bd, pos);
+    // if (wtree_find(wt, bd) != -1) {
+    //   goto label_continue;
+    // }
     board bd_tmp = *bd;
     for (int i = 0; i < 2; ++i) {
       for (int j = 0; j < 4; ++j) {
@@ -185,6 +188,7 @@ void main_while() {
       for (int i = 0; i < thread_num; ++i) {
         pthread_join(threads[i], NULL);
       }
+      printf("Save to file wtree_%d.bin\n", iter_depth);
       save_to_file(&wt, iter_depth);
     }
   }
