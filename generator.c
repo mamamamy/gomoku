@@ -211,7 +211,7 @@ void main_while() {
       printf("Current max depth: %d\n", iter_depth);
       int thread_num = 0;
       for (int i = 0; i < THREAD_COUNT && pos < BOARD_SIZE * BOARD_SIZE; ++i, ++pos) {
-        if (pos == CENTER_POSITION) {
+        if (unsorted_pos[i] == CENTER_POSITION) {
           continue;
         }
         board_init(&boards[i]);
