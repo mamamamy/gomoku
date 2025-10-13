@@ -207,7 +207,6 @@ void main_while() {
       unsorted_pos[i] = unsorted_pos[random_i];
       unsorted_pos[random_i] = tmp;
     }
-    return;
     for (int pos = 0; pos < BOARD_SIZE * BOARD_SIZE;) {
       printf("Current max depth: %d\n", iter_depth);
       int thread_num = 0;
