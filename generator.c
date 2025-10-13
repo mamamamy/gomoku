@@ -191,7 +191,7 @@ void main_while() {
   // load_from_file(&wt, 1);
   board bd;
   board_init(&bd);
-  board_put_black(&bd, CENTER_POSITION);
+  wtree_insert(&wt, &bd, CENTER_POSITION);
   pthread_t threads[THREAD_COUNT];
   board boards[THREAD_COUNT];
   thread_arg args[THREAD_COUNT];
