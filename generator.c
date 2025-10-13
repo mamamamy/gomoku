@@ -7,10 +7,13 @@
 #include <stdio.h>
 #include <inttypes.h>
 #include <pthread.h>
+#include <stdlib.h>
 
+#define CENTER_POSITION 112
 #define TEST_BLACK_RANGE 3
-#define THREAD_COUNT 20
+#define THREAD_COUNT 16
 #define INITIAL_DEPTH 3
+#define LOAD_FROM_FILE_ID 1
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #define min(a, b) ((a) < (b) ? (a) : (b))
@@ -78,6 +81,9 @@ static int test_black(wtree *wt, board *bd, int curr_depth, int max_depth);
 
 static int test_white(wtree *wt, board *bd, int curr_depth, int max_depth) {
   for (int pos = 0; pos < BOARD_SIZE * BOARD_SIZE; ++pos) {
+    if (board_has_piece(bd, pos)) {
+      continue;
+    }
     board_put_white(bd, pos);
     // if (wtree_find(wt, bd) != -1) {
     //   goto label_continue;
@@ -132,6 +138,19 @@ static int test_black(wtree *wt, board *bd, int curr_depth, int max_depth) {
         if (board_has_piece(bd, new_pos)) {
           continue;
         }
+        // if (wtree_find(wt, bd) != -1) {
+        //   goto label_continue;
+        // }
+        board bd_tmp = *bd;
+        for (int i = 0; i < 2; ++i) {
+          for (int j = 0; j < 4; ++j) {
+            if (wtree_find(wt, &bd_tmp) != -1) {
+              goto label_continue;
+            }
+            board_rotate_clockwise_90(&bd_tmp);
+          }
+          board_flip_horizontal(&bd_tmp);
+        }
         board_put_black(bd, new_pos);
         if (curr_depth < max_depth) {
           if (test_white(wt, bd, curr_depth + 1, max_depth) == -1) {
@@ -141,6 +160,7 @@ static int test_black(wtree *wt, board *bd, int curr_depth, int max_depth) {
             return new_pos;
           }
         }
+label_continue:
         board_remove_black(bd, new_pos);
       }
     }
@@ -168,18 +188,36 @@ void main_while() {
   printf("Build started\n");
   wtree wt;
   wtree_init(&wt);
-  load_from_file(&wt, 1);
+  // load_from_file(&wt, 1);
+  board bd;
+  board_init(&bd);
+  board_put_black(&bd, CENTER_POSITION);
   pthread_t threads[THREAD_COUNT];
   board boards[THREAD_COUNT];
   thread_arg args[THREAD_COUNT];
+  int unsorted_pos[BOARD_SIZE * BOARD_SIZE];
+  for (int i = 0; i < BOARD_SIZE * BOARD_SIZE; ++i) {
+    unsorted_pos[i] = i;
+  }
+  srand(time(NULL));
   for (int iter_depth = INITIAL_DEPTH; iter_depth <= BOARD_SIZE * BOARD_SIZE; iter_depth += 2) {
+    for (int i = 0; i < BOARD_SIZE * BOARD_SIZE; ++i) {
+      int random_i = rand() % (BOARD_SIZE * BOARD_SIZE);
+      int tmp = unsorted_pos[i];
+      unsorted_pos[i] = unsorted_pos[random_i];
+      unsorted_pos[random_i] = tmp;
+    }
+    return;
     for (int pos = 0; pos < BOARD_SIZE * BOARD_SIZE;) {
       printf("Current max depth: %d\n", iter_depth);
       int thread_num = 0;
       for (int i = 0; i < THREAD_COUNT && pos < BOARD_SIZE * BOARD_SIZE; ++i, ++pos) {
+        if (pos == CENTER_POSITION) {
+          continue;
+        }
         board_init(&boards[i]);
-        board_put_black(&boards[i], 112);
-        board_put_white(&boards[i], pos);
+        board_put_black(&boards[i], CENTER_POSITION);
+        board_put_white(&boards[i], unsorted_pos[i]);
         args[i].bd = &boards[i];
         args[i].max_depth = iter_depth;
         args[i].wt = &wt;
