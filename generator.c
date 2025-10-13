@@ -9,7 +9,8 @@
 #include <pthread.h>
 
 #define TEST_BLACK_RANGE 3
-#define THREAD_COUNT 30
+#define THREAD_COUNT 20
+#define INITIAL_DEPTH 3
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #define min(a, b) ((a) < (b) ? (a) : (b))
@@ -171,7 +172,7 @@ void main_while() {
   pthread_t threads[THREAD_COUNT];
   board boards[THREAD_COUNT];
   thread_arg args[THREAD_COUNT];
-  for (int iter_depth = 3; iter_depth <= BOARD_SIZE * BOARD_SIZE; iter_depth += 2) {
+  for (int iter_depth = INITIAL_DEPTH; iter_depth <= BOARD_SIZE * BOARD_SIZE; iter_depth += 2) {
     for (int pos = 0; pos < BOARD_SIZE * BOARD_SIZE;) {
       printf("Current max depth: %d\n", iter_depth);
       int thread_num = 0;
