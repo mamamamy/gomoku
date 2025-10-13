@@ -1,8 +1,7 @@
-#!/bin/bash
 
 gcc -Wall -Wextra -O3 generator.c save.c vct.c board.c bitmap256.c wtree.c -o generator -lpthread
 
-folder_name="./data"
-if [ ! -d "$folder_name" ]; then
-  mkdir "$folder_name"
-fi
+set "folder_name=./data"
+if not exist "%folder_name%" (
+  md "%folder_name%"
+)
