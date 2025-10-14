@@ -28,7 +28,6 @@ int board_equal(const board *a, const board *b);
 
 void board_print(const board *bd);
 int board_check_has_overlapp(const board *bd);
-int board_check_win(const board *bd, int pos);
 
 void board_to_xy(int pos, int *x, int *y);
 int board_to_pos(int x, int y);

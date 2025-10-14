@@ -5,12 +5,6 @@
 #define VCT_RANGE 2
 #define VCT_MAX_DEPTH 13
 
-#define VCT_PATTERN_NONE 0
-#define VCT_PATTERN_FIVE_IN_A_ROW (1 << 0)
-#define VCT_PATTERN_LIVE_FOUR (1 << 1)
-#define VCT_PATTERN_BROKEN_FOUR (1 << 2)
-#define VCT_PATTERN_LIVE_THREE (1 << 3)
-
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #define min(a, b) ((a) < (b) ? (a) : (b))
 
@@ -33,7 +27,7 @@
 // X _ O O _ O _ X
 // X _ O O O _ _ X
 
-static int check_pattern(board *bd, int pos) {
+int vct_check_pattern(board *bd, int pos) {
   int is_black = board_has_black(bd, pos);
   int is_white = board_has_white(bd, pos);
   if (!is_black && !is_white) {
@@ -600,6 +594,7 @@ static int vct_black(board *bd, int curr_depth, int max_depth, int *has_vct);
 static int vct_white(board *bd, int curr_depth, int max_depth, int *has_vct) {
   bitmap256 checked;
   bitmap256_init(&checked);
+  int has_threat = 0;
   for (int pos = 0; pos < BOARD_SIZE * BOARD_SIZE; ++pos) {
     if (!board_has_piece(bd, pos)) {
       continue;
@@ -622,7 +617,7 @@ static int vct_white(board *bd, int curr_depth, int max_depth, int *has_vct) {
           continue;
         }
         board_put_white(bd, new_pos);
-        pattern = check_pattern(bd, new_pos);
+        pattern = vct_check_pattern(bd, new_pos);
         board_remove_white(bd, new_pos);
         if (pattern & VCT_PATTERN_FIVE_IN_A_ROW) {
           return new_pos;
@@ -636,7 +631,7 @@ static int vct_white(board *bd, int curr_depth, int max_depth, int *has_vct) {
           }
         }
         board_put_black(bd, new_pos);
-        pattern = check_pattern(bd, new_pos);
+        pattern = vct_check_pattern(bd, new_pos);
         board_remove_black(bd, new_pos);
         if (pattern & (VCT_PATTERN_LIVE_FOUR | VCT_PATTERN_FIVE_IN_A_ROW)) {
           board_put_white(bd, new_pos);
@@ -645,9 +640,13 @@ static int vct_white(board *bd, int curr_depth, int max_depth, int *has_vct) {
           if (result == -1) {
             return new_pos;
           }
+          has_threat = 1;
         }
       }
     }
+  }
+  if (!has_threat) {
+    return 0;
   }
   return -1;
 }
@@ -677,7 +676,7 @@ static int vct_black(board *bd, int curr_depth, int max_depth, int *has_vct) {
           continue;
         }
         board_put_black(bd, new_pos);
-        pattern = check_pattern(bd, new_pos);
+        pattern = vct_check_pattern(bd, new_pos);
         board_remove_black(bd, new_pos);
         if (pattern & VCT_PATTERN_FIVE_IN_A_ROW) {
           return new_pos;
@@ -695,7 +694,7 @@ static int vct_black(board *bd, int curr_depth, int max_depth, int *has_vct) {
           }
         }
         board_put_white(bd, new_pos);
-        pattern = check_pattern(bd, new_pos);
+        pattern = vct_check_pattern(bd, new_pos);
         board_remove_white(bd, new_pos);
         if ((pattern & (VCT_PATTERN_LIVE_FOUR | VCT_PATTERN_FIVE_IN_A_ROW)) && curr_depth < max_depth) {
           board_put_black(bd, new_pos);

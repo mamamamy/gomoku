@@ -30,17 +30,17 @@ static int test_white(wtree *wt, board *bd, int curr_depth, int max_depth) {
     // if (wtree_find(wt, bd) != -1) {
     //   goto label_continue;
     // }
-    board bd_tmp = *bd;
+    board tmp_bd = *bd;
     for (int i = 0; i < 2; ++i) {
       for (int j = 0; j < 4; ++j) {
-        if (wtree_find(wt, &bd_tmp) != -1) {
+        if (wtree_find(wt, &tmp_bd) != -1) {
           goto label_continue;
         }
-        board_rotate_clockwise_90(&bd_tmp);
+        board_rotate_clockwise_90(&tmp_bd);
       }
-      board_flip_horizontal(&bd_tmp);
+      board_flip_horizontal(&tmp_bd);
     }
-    if (board_check_win(bd, pos)) {
+    if (vct_check_pattern(bd, pos) & VCT_PATTERN_FIVE_IN_A_ROW) {
       board_remove_white(bd, pos);
       return pos;
     }
@@ -83,22 +83,22 @@ static int test_black(wtree *wt, board *bd, int curr_depth, int max_depth) {
         // if (wtree_find(wt, bd) != -1) {
         //   goto label_continue;
         // }
-        board bd_tmp = *bd;
+        board tmp_bd = *bd;
         for (int i = 0; i < 2; ++i) {
           for (int j = 0; j < 4; ++j) {
-            if (wtree_find(wt, &bd_tmp) != -1) {
+            if (wtree_find(wt, &tmp_bd) != -1) {
               goto label_continue;
             }
-            board_rotate_clockwise_90(&bd_tmp);
+            board_rotate_clockwise_90(&tmp_bd);
           }
-          board_flip_horizontal(&bd_tmp);
+          board_flip_horizontal(&tmp_bd);
         }
         board_put_black(bd, new_pos);
         if (curr_depth < max_depth) {
           if (test_white(wt, bd, curr_depth + 1, max_depth) == -1) {
             board_remove_black(bd, new_pos);
             wtree_insert(wt, bd, new_pos);
-            printf("Found a winning node.\nWin tree size: %"PRIu64"\n", wtree_size(wt));
+            printf("Found a winning node\nWin tree size: %"PRIu64"\n", wtree_size(wt));
             return new_pos;
           }
         }
