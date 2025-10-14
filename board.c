@@ -1,5 +1,7 @@
 #include "board.h"
 
+#include <stdio.h>
+
 void board_init(board *bd) {
   for (int i = 0; i < 8; ++i) {
     bd->b[i] = 0;
