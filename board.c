@@ -130,20 +130,27 @@ int board_equal(const board *a, const board *b) {
 }
 
 void board_print(const board *bd) {
+  printf("    0    1    2    3    4    5    6    7    8    9    a    b    c    d    e \n");
+  printf("  ┌────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┐\n");
   for (int y = 0; y < BOARD_SIZE; ++y) {
+    printf("%x │", y);
     for (int x = 0; x < BOARD_SIZE; ++x) {
       int pos = board_to_pos(x, y);
-      if (board_has_black(bd, pos)) {
-        printf("X  ");
-      } else if (board_has_white(bd, pos)) {
-        printf("O  ");
+      if (board_has_black(&bd, pos)) {
+        printf(" ⚫ │");
+      } else if (board_has_white(&bd, pos)) {
+        printf(" ⚪ │");
       } else {
-        printf("_  ");
+        printf("    │");
       }
     }
     printf("\n");
+    if (y != BOARD_SIZE - 1) {
+      printf("  ├────┼────┼────┼────┼────┼────┼────┼────┼────┼────┼────┼────┼────┼────┼────┤\n");
+    } else {
+      printf("  └────┴────┴────┴────┴────┴────┴────┴────┴────┴────┴────┴────┴────┴────┴────┘\n");
+    }
   }
-  printf("\n");
 }
 
 int board_check_has_overlapp(const board *bd) {
