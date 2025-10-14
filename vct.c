@@ -3,13 +3,7 @@
 #include "bitmap256.h"
 
 #define VCT_RANGE 2
-#define VCT_MAX_DEPTH 13
-
-#define VCT_PATTERN_NONE 0
-#define VCT_PATTERN_FIVE_IN_A_ROW (1 << 0)
-#define VCT_PATTERN_LIVE_FOUR (1 << 1)
-#define VCT_PATTERN_BROKEN_FOUR (1 << 2)
-#define VCT_PATTERN_LIVE_THREE (1 << 3)
+#define VCT_MAX_DEPTH 15
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #define min(a, b) ((a) < (b) ? (a) : (b))
@@ -33,7 +27,7 @@
 // X _ O O _ O _ X
 // X _ O O O _ _ X
 
-static int check_pattern(board *bd, int pos) {
+int vct_check_pattern(board *bd, int pos) {
   int is_black = board_has_black(bd, pos);
   int is_white = board_has_white(bd, pos);
   if (!is_black && !is_white) {
@@ -328,8 +322,8 @@ label_count2_check_end:
       }
       if (broken_end) {
         int new_x, new_y, new_pos;
-        new_x = end_x + dirs[i][0];
-        new_y = end_y + dirs[i][1];
+        new_x = begin_x + dirs[i][0];
+        new_y = begin_y + dirs[i][1];
         if (!board_is_valid_xy(new_x, new_y)) {
           // X _ O O X
           continue;
@@ -600,6 +594,7 @@ static int vct_black(board *bd, int curr_depth, int max_depth, int *has_vct);
 static int vct_white(board *bd, int curr_depth, int max_depth, int *has_vct) {
   bitmap256 checked;
   bitmap256_init(&checked);
+  int has_threat = 0;
   for (int pos = 0; pos < BOARD_SIZE * BOARD_SIZE; ++pos) {
     if (!board_has_piece(bd, pos)) {
       continue;
@@ -622,7 +617,7 @@ static int vct_white(board *bd, int curr_depth, int max_depth, int *has_vct) {
           continue;
         }
         board_put_white(bd, new_pos);
-        pattern = check_pattern(bd, new_pos);
+        pattern = vct_check_pattern(bd, new_pos);
         board_remove_white(bd, new_pos);
         if (pattern & VCT_PATTERN_FIVE_IN_A_ROW) {
           return new_pos;
@@ -636,7 +631,7 @@ static int vct_white(board *bd, int curr_depth, int max_depth, int *has_vct) {
           }
         }
         board_put_black(bd, new_pos);
-        pattern = check_pattern(bd, new_pos);
+        pattern = vct_check_pattern(bd, new_pos);
         board_remove_black(bd, new_pos);
         if (pattern & (VCT_PATTERN_LIVE_FOUR | VCT_PATTERN_FIVE_IN_A_ROW)) {
           board_put_white(bd, new_pos);
@@ -645,9 +640,13 @@ static int vct_white(board *bd, int curr_depth, int max_depth, int *has_vct) {
           if (result == -1) {
             return new_pos;
           }
+          has_threat = 1;
         }
       }
     }
+  }
+  if (!has_threat) {
+    return 0;
   }
   return -1;
 }
@@ -677,7 +676,7 @@ static int vct_black(board *bd, int curr_depth, int max_depth, int *has_vct) {
           continue;
         }
         board_put_black(bd, new_pos);
-        pattern = check_pattern(bd, new_pos);
+        pattern = vct_check_pattern(bd, new_pos);
         board_remove_black(bd, new_pos);
         if (pattern & VCT_PATTERN_FIVE_IN_A_ROW) {
           return new_pos;
@@ -695,7 +694,7 @@ static int vct_black(board *bd, int curr_depth, int max_depth, int *has_vct) {
           }
         }
         board_put_white(bd, new_pos);
-        pattern = check_pattern(bd, new_pos);
+        pattern = vct_check_pattern(bd, new_pos);
         board_remove_white(bd, new_pos);
         if ((pattern & (VCT_PATTERN_LIVE_FOUR | VCT_PATTERN_FIVE_IN_A_ROW)) && curr_depth < max_depth) {
           board_put_black(bd, new_pos);
@@ -715,7 +714,7 @@ static int vct_black_iter_deepening(board *bd, int max_depth) {
   for (int iter_depth = 1; iter_depth <= max_depth; iter_depth += 2) {
     int has_vct = 0;
     int result = vct_black(bd, 1, iter_depth, &has_vct);
-    if (max_depth > 1 && !has_vct) {
+    if (!has_vct) {
       return -1;
     }
     if (result != -1) {

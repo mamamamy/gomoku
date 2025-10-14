@@ -1,5 +1,7 @@
 #include "board.h"
 
+#include <stdio.h>
+
 void board_init(board *bd) {
   for (int i = 0; i < 8; ++i) {
     bd->b[i] = 0;
@@ -121,6 +123,39 @@ uint64_t board_hash(const board *bd) {
 int board_equal(const board *a, const board *b) {
   for (int i = 0; i < 8; ++i) {
     if (a->b[i] != b->b[i] || a->w[i] != b->w[i]) {
+      return 0;
+    }
+  }
+  return 1;
+}
+
+void board_print(const board *bd) {
+  printf("    0    1    2    3    4    5    6    7    8    9    a    b    c    d    e \n");
+  printf("  ┌────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┐\n");
+  for (int y = 0; y < BOARD_SIZE; ++y) {
+    printf("%x │", y);
+    for (int x = 0; x < BOARD_SIZE; ++x) {
+      int pos = board_to_pos(x, y);
+      if (board_has_black(bd, pos)) {
+        printf(" ⚫ │");
+      } else if (board_has_white(bd, pos)) {
+        printf(" ⚪ │");
+      } else {
+        printf("    │");
+      }
+    }
+    printf("\n");
+    if (y != BOARD_SIZE - 1) {
+      printf("  ├────┼────┼────┼────┼────┼────┼────┼────┼────┼────┼────┼────┼────┼────┼────┤\n");
+    } else {
+      printf("  └────┴────┴────┴────┴────┴────┴────┴────┴────┴────┴────┴────┴────┴────┴────┘\n");
+    }
+  }
+}
+
+int board_check_has_overlapp(const board *bd) {
+  for (int pos = 0; pos < BOARD_SIZE * BOARD_SIZE; ++pos) {
+    if (board_has_black(bd, pos) && board_has_white(bd, pos)) {
       return 0;
     }
   }

@@ -26,6 +26,9 @@ void board_rotate_clockwise_90(board* bd);
 uint64_t board_hash(const board *bd);
 int board_equal(const board *a, const board *b);
 
+void board_print(const board *bd);
+int board_check_has_overlapp(const board *bd);
+
 void board_to_xy(int pos, int *x, int *y);
 int board_to_pos(int x, int y);
 int board_is_valid_xy(int x, int y);
