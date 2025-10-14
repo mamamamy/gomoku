@@ -328,8 +328,8 @@ label_count2_check_end:
       }
       if (broken_end) {
         int new_x, new_y, new_pos;
-        new_x = end_x + dirs[i][0];
-        new_y = end_y + dirs[i][1];
+        new_x = begin_x + dirs[i][0];
+        new_y = begin_y + dirs[i][1];
         if (!board_is_valid_xy(new_x, new_y)) {
           // X _ O O X
           continue;
@@ -715,7 +715,7 @@ static int vct_black_iter_deepening(board *bd, int max_depth) {
   for (int iter_depth = 1; iter_depth <= max_depth; iter_depth += 2) {
     int has_vct = 0;
     int result = vct_black(bd, 1, iter_depth, &has_vct);
-    if (max_depth > 1 && !has_vct) {
+    if (!has_vct) {
       return -1;
     }
     if (result != -1) {
