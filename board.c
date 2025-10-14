@@ -136,9 +136,9 @@ void board_print(const board *bd) {
     printf("%x │", y);
     for (int x = 0; x < BOARD_SIZE; ++x) {
       int pos = board_to_pos(x, y);
-      if (board_has_black(&bd, pos)) {
+      if (board_has_black(bd, pos)) {
         printf(" ⚫ │");
-      } else if (board_has_white(&bd, pos)) {
+      } else if (board_has_white(bd, pos)) {
         printf(" ⚪ │");
       } else {
         printf("    │");
