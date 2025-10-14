@@ -3,7 +3,7 @@
 #include "bitmap256.h"
 
 #define VCT_RANGE 2
-#define VCT_MAX_DEPTH 13
+#define VCT_MAX_DEPTH 15
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #define min(a, b) ((a) < (b) ? (a) : (b))
