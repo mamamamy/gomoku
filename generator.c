@@ -66,44 +66,46 @@ static int test_black(wtree *wt, board *bd, int curr_depth, int max_depth) {
     }
     int x, y;
     board_to_xy(pos, &x, &y);
-    int min_x = max(x - TEST_BLACK_RANGE, 0);
-    int min_y = max(y - TEST_BLACK_RANGE, 0);
-    int max_x = min(x + TEST_BLACK_RANGE, BOARD_SIZE - 1);
-    int max_y = min(y + TEST_BLACK_RANGE, BOARD_SIZE - 1);
-    for (int new_x = min_x; new_x <= max_x; ++new_x) {
-      for (int new_y = min_y; new_y <= max_y; ++new_y) {
-        int new_pos = board_to_pos(new_x, new_y);
-        if (bitmap256_test(&checked, new_pos)) {
-          continue;
-        }
-        bitmap256_set(&checked, new_pos);
-        if (board_has_piece(bd, new_pos)) {
-          continue;
-        }
-        // if (wtree_find(wt, bd) != -1) {
-        //   goto label_continue;
-        // }
-        board tmp_bd = *bd;
-        for (int i = 0; i < 2; ++i) {
-          for (int j = 0; j < 4; ++j) {
-            if (wtree_find(wt, &tmp_bd) != -1) {
-              goto label_continue;
+    for (int range = 1; range <= TEST_BLACK_RANGE; ++range) {
+      int min_x = max(x - range, 0);
+      int min_y = max(y - range, 0);
+      int max_x = min(x + range, BOARD_SIZE - 1);
+      int max_y = min(y + range, BOARD_SIZE - 1);
+      for (int new_x = min_x; new_x <= max_x; ++new_x) {
+        for (int new_y = min_y; new_y <= max_y; ++new_y) {
+          int new_pos = board_to_pos(new_x, new_y);
+          if (bitmap256_test(&checked, new_pos)) {
+            continue;
+          }
+          bitmap256_set(&checked, new_pos);
+          if (board_has_piece(bd, new_pos)) {
+            continue;
+          }
+          // if (wtree_find(wt, bd) != -1) {
+          //   goto label_continue;
+          // }
+          board tmp_bd = *bd;
+          for (int i = 0; i < 2; ++i) {
+            for (int j = 0; j < 4; ++j) {
+              int result = wtree_find(wt, &tmp_bd);
+              if (result != -1) {
+                return result;
+              }
+              board_rotate_clockwise_90(&tmp_bd);
             }
-            board_rotate_clockwise_90(&tmp_bd);
+            board_flip_horizontal(&tmp_bd);
           }
-          board_flip_horizontal(&tmp_bd);
-        }
-        board_put_black(bd, new_pos);
-        if (curr_depth < max_depth) {
-          if (test_white(wt, bd, curr_depth + 1, max_depth) == -1) {
+          if (curr_depth < max_depth) {
+            board_put_black(bd, new_pos);
+            int result = test_white(wt, bd, curr_depth + 1, max_depth);
             board_remove_black(bd, new_pos);
-            wtree_insert(wt, bd, new_pos);
-            printf("Found a winning node\nWin tree size: %"PRIu64"\n", wtree_size(wt));
-            return new_pos;
+            if (result == -1) {
+              wtree_insert(wt, bd, new_pos);
+              printf("Found a winning node\nWin tree size: %"PRIu64"\n", wtree_size(wt));
+              return new_pos;
+            }
           }
         }
-label_continue:
-        board_remove_black(bd, new_pos);
       }
     }
   }
