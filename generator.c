@@ -59,6 +59,7 @@ label_continue:
 static int test_black(wtree *wt, board *bd, int curr_depth, int max_depth) {
   bitmap256 checked;
   bitmap256_init(&checked);
+  uint64_t prev_wtree_size = wtree_size(wt);
   board tmp_bd = *bd;
   for (int i = 0; i < 2; ++i) {
     for (int j = 0; j < 4; ++j) {
@@ -72,7 +73,6 @@ static int test_black(wtree *wt, board *bd, int curr_depth, int max_depth) {
       board_flip_horizontal(&tmp_bd);
     }
   }
-  uint64_t prev_wtree_size = wtree_size(wt);
   for (int pos = 0; pos < BOARD_SIZE * BOARD_SIZE; ++pos) {
     if (!board_has_piece(bd, pos)) {
       continue;
