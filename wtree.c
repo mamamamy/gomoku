@@ -6,7 +6,7 @@
 
 static void wtree_resize(wtree *wt) {
   uint64_t new_bucket_num = wt->bucket_num << 1;
-  wtree_entry **new_buckets = malloc(sizeof(wtree_entry *) * new_bucket_num);
+  wtree_entry **new_buckets = malloc(sizeof(*new_buckets) * new_bucket_num);
   for (uint64_t i = 0; i < new_bucket_num; ++i) {
     new_buckets[i] = NULL;
   }
@@ -28,7 +28,7 @@ static void wtree_resize(wtree *wt) {
 
 void wtree_init(wtree *wt) {
   wt->bucket_num = WTREE_BUCKET_NUM;
-  wt->buckets = malloc(sizeof(wtree_entry *) * wt->bucket_num);
+  wt->buckets = malloc(sizeof(*wt->buckets) * wt->bucket_num);
   wt->item_num = 0;
   for (uint64_t i = 0; i < wt->bucket_num; ++i) {
     wt->buckets[i] = NULL;
@@ -79,7 +79,7 @@ void wtree_insert(wtree *wt, const board *bd, int pos) {
     }
     entry = entry->next;
   }
-  entry = malloc(sizeof(wtree_entry));
+  entry = malloc(sizeof(*entry));
   entry->bd = *bd;
   entry->pos = pos;
   entry->next = wt->buckets[bucket_index];
