@@ -12,7 +12,7 @@
 #define CENTER_POSITION 112
 #define TEST_BLACK_RANGE 3
 #define THREAD_COUNT 16
-#define INITIAL_DEPTH 3
+#define INITIAL_DEPTH 5
 #define LOAD_FROM_FILE_ID 1
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
@@ -69,6 +69,9 @@ static int test_white(wtree *wt, board *bd, int curr_depth, int max_depth) {
 }
 
 static int test_black(wtree *wt, board *bd, int curr_depth, int max_depth) {
+  if (curr_depth >= max_depth) {
+    return -1;
+  }
   bitmap256 checked;
   bitmap256_init(&checked);
   uint64_t prev_wtree_size = wtree_size(wt);
@@ -104,15 +107,13 @@ static int test_black(wtree *wt, board *bd, int curr_depth, int max_depth) {
             return result;
           }
         }
-        if (curr_depth < max_depth) {
-          board_put_black(bd, new_pos);
-          int result = test_white(wt, bd, curr_depth + 1, max_depth);
-          board_remove_black(bd, new_pos);
-          if (result == -1) {
-            wtree_insert(wt, bd, new_pos);
-            printf("Found a winning node\nWin tree size: %"PRIu64"\n", wtree_size(wt));
-            return new_pos;
-          }
+        board_put_black(bd, new_pos);
+        int result = test_white(wt, bd, curr_depth + 1, max_depth);
+        board_remove_black(bd, new_pos);
+        if (result == -1) {
+          wtree_insert(wt, bd, new_pos);
+          printf("Found a winning node\nWin tree size: %"PRIu64"\n", wtree_size(wt));
+          return new_pos;
         }
       }
     }
