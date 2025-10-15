@@ -95,6 +95,7 @@ static int test_black(wtree *wt, board *bd, int curr_depth, int max_depth) {
         }
         // Only check for duplicates when the wtree size changes
         if (wtree_size(wt) > prev_wtree_size) {
+          prev_wtree_size = wtree_size(wt);
           board tmp_bd = *bd;
           for (int i = 0; i < 2; ++i) {
             for (int j = 0; j < 4; ++j) {
