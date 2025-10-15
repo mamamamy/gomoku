@@ -18,6 +18,22 @@
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #define min(a, b) ((a) < (b) ? (a) : (b))
 
+static int find_win_pos(wtree *wt, board bd) {
+  for (int i = 0; i < 2; ++i) {
+    for (int j = 0; j < 4; ++j) {
+      int result = wtree_find(wt, &bd);
+      if (result != -1) {
+        return result;
+      }
+      board_rotate_clockwise_90(&bd);
+    }
+    if (i == 0) {
+      board_flip_horizontal(&bd);
+    }
+  }
+  return -1;
+}
+
 static int test_white(wtree *wt, board *bd, int curr_depth, int max_depth);
 static int test_black(wtree *wt, board *bd, int curr_depth, int max_depth);
 
@@ -27,30 +43,22 @@ static int test_white(wtree *wt, board *bd, int curr_depth, int max_depth) {
       continue;
     }
     board_put_white(bd, pos);
-    board tmp_bd = *bd;
-    for (int i = 0; i < 2; ++i) {
-      for (int j = 0; j < 4; ++j) {
-        if (wtree_find(wt, &tmp_bd) != -1) {
-          goto label_continue;
-        }
-        board_rotate_clockwise_90(&tmp_bd);
-      }
-      if (i == 0) {
-        board_flip_horizontal(&tmp_bd);
-      }
+    if (find_win_pos(wt, *bd) != -1) {
+      board_remove_white(bd, pos);
+      continue;
     }
     if (vct_check_pattern(bd, pos) & VCT_PATTERN_FIVE_IN_A_ROW) {
       board_remove_white(bd, pos);
       return pos;
     }
     if (vct(bd) != -1) {
-      goto label_continue;
+      board_remove_white(bd, pos);
+      continue;
     }
     if (test_black(wt, bd, curr_depth + 1, max_depth) == -1) {
       board_remove_white(bd, pos);
       return pos;
     }
-label_continue:
     board_remove_white(bd, pos);
   }
   return -1;
@@ -96,18 +104,9 @@ static int test_black(wtree *wt, board *bd, int curr_depth, int max_depth) {
         // Only check for duplicates when the wtree size changes
         if (wtree_size(wt) > prev_wtree_size) {
           prev_wtree_size = wtree_size(wt);
-          board tmp_bd = *bd;
-          for (int i = 0; i < 2; ++i) {
-            for (int j = 0; j < 4; ++j) {
-              int result = wtree_find(wt, &tmp_bd);
-              if (result != -1) {
-                return result;
-              }
-              board_rotate_clockwise_90(&tmp_bd);
-            }
-            if (i == 0) {
-              board_flip_horizontal(&tmp_bd);
-            }
+          int result = find_win_pos(wt, *bd);
+          if (result != -1) {
+            return result;
           }
         }
         if (curr_depth < max_depth) {
