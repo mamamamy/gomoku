@@ -645,6 +645,7 @@ static int vct_white(board *bd, int curr_depth, int max_depth, int *has_vct) {
       }
     }
   }
+  // If Black doesn't has threat in this round, White win
   if (!has_threat) {
     return 0;
   }
