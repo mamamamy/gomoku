@@ -86,24 +86,24 @@ static int test_black(wtree *wt, board *bd, int curr_depth, int max_depth) {
         board tmp_bd = *bd;
         for (int i = 0; i < 2; ++i) {
           for (int j = 0; j < 4; ++j) {
-            if (wtree_find(wt, &tmp_bd) != -1) {
-              goto label_continue;
+            int result = wtree_find(wt, &tmp_bd);
+            if (result != -1) {
+              return result;
             }
             board_rotate_clockwise_90(&tmp_bd);
           }
           board_flip_horizontal(&tmp_bd);
         }
-        board_put_black(bd, new_pos);
         if (curr_depth < max_depth) {
-          if (test_white(wt, bd, curr_depth + 1, max_depth) == -1) {
-            board_remove_black(bd, new_pos);
+          board_put_black(bd, new_pos);
+          int result = test_white(wt, bd, curr_depth + 1, max_depth);
+          board_remove_black(bd, new_pos);
+          if (result == -1) {
             wtree_insert(wt, bd, new_pos);
             printf("Found a winning node\nWin tree size: %"PRIu64"\n", wtree_size(wt));
             return new_pos;
           }
         }
-label_continue:
-        board_remove_black(bd, new_pos);
       }
     }
   }
