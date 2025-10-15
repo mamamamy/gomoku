@@ -25,11 +25,15 @@ static int find_win_pos(wtree *wt, board bd) {
       if (result != -1) {
         return result;
       }
+      if (i == 1 && j == 3) {
+        break;
+      }
       board_rotate_clockwise_90(&bd);
     }
-    if (i == 0) {
-      board_flip_horizontal(&bd);
+    if (i == 1) {
+      break;
     }
+    board_flip_horizontal(&bd);
   }
   return -1;
 }
@@ -68,18 +72,9 @@ static int test_black(wtree *wt, board *bd, int curr_depth, int max_depth) {
   bitmap256 checked;
   bitmap256_init(&checked);
   uint64_t prev_wtree_size = wtree_size(wt);
-  board tmp_bd = *bd;
-  for (int i = 0; i < 2; ++i) {
-    for (int j = 0; j < 4; ++j) {
-      int result = wtree_find(wt, &tmp_bd);
-      if (result != -1) {
-        return result;
-      }
-      board_rotate_clockwise_90(&tmp_bd);
-    }
-    if (i == 0) {
-      board_flip_horizontal(&tmp_bd);
-    }
+  int result = find_win_pos(wt, *bd);
+  if (result != -1) {
+    return result;
   }
   for (int pos = 0; pos < BOARD_SIZE * BOARD_SIZE; ++pos) {
     if (!board_has_piece(bd, pos)) {
