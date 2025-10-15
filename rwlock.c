@@ -21,9 +21,16 @@ void rwlock_rdlock(rwlock *lock) {
 }
 
 void rwlock_wrlock(rwlock *lock) {
+  spinlock_lock(&lock->lock);
+  ++lock->write_count;
+  if (lock->read_count <= 0 && !lock->write_locked) {
+    lock->write_locked = 1;
+    spinlock_unlock(&lock->lock);
+    return;
+  }
+  spinlock_unlock(&lock->lock);
   for (;;) {
     spinlock_lock(&lock->lock);
-    ++lock->write_count;
     if (lock->read_count <= 0 && !lock->write_locked) {
       lock->write_locked = 1;
       spinlock_unlock(&lock->lock);
