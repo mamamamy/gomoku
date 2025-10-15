@@ -27,9 +27,6 @@ static int test_white(wtree *wt, board *bd, int curr_depth, int max_depth) {
       continue;
     }
     board_put_white(bd, pos);
-    // if (wtree_find(wt, bd) != -1) {
-    //   goto label_continue;
-    // }
     board tmp_bd = *bd;
     for (int i = 0; i < 2; ++i) {
       for (int j = 0; j < 4; ++j) {
@@ -38,7 +35,9 @@ static int test_white(wtree *wt, board *bd, int curr_depth, int max_depth) {
         }
         board_rotate_clockwise_90(&tmp_bd);
       }
-      board_flip_horizontal(&tmp_bd);
+      if (i == 0) {
+        board_flip_horizontal(&tmp_bd);
+      }
     }
     if (vct_check_pattern(bd, pos) & VCT_PATTERN_FIVE_IN_A_ROW) {
       board_remove_white(bd, pos);
@@ -60,6 +59,20 @@ label_continue:
 static int test_black(wtree *wt, board *bd, int curr_depth, int max_depth) {
   bitmap256 checked;
   bitmap256_init(&checked);
+  board tmp_bd = *bd;
+  for (int i = 0; i < 2; ++i) {
+    for (int j = 0; j < 4; ++j) {
+      int result = wtree_find(wt, &tmp_bd);
+      if (result != -1) {
+        return result;
+      }
+      board_rotate_clockwise_90(&tmp_bd);
+    }
+    if (i == 0) {
+      board_flip_horizontal(&tmp_bd);
+    }
+  }
+  uint64_t prev_wtree_size = wtree_size(wt);
   for (int pos = 0; pos < BOARD_SIZE * BOARD_SIZE; ++pos) {
     if (!board_has_piece(bd, pos)) {
       continue;
@@ -80,19 +93,21 @@ static int test_black(wtree *wt, board *bd, int curr_depth, int max_depth) {
         if (board_has_piece(bd, new_pos)) {
           continue;
         }
-        // if (wtree_find(wt, bd) != -1) {
-        //   goto label_continue;
-        // }
-        board tmp_bd = *bd;
-        for (int i = 0; i < 2; ++i) {
-          for (int j = 0; j < 4; ++j) {
-            int result = wtree_find(wt, &tmp_bd);
-            if (result != -1) {
-              return result;
+        // Only check for duplicates when the wtree size changes
+        if (wtree_size(wt) > prev_wtree_size) {
+          board tmp_bd = *bd;
+          for (int i = 0; i < 2; ++i) {
+            for (int j = 0; j < 4; ++j) {
+              int result = wtree_find(wt, &tmp_bd);
+              if (result != -1) {
+                return result;
+              }
+              board_rotate_clockwise_90(&tmp_bd);
             }
-            board_rotate_clockwise_90(&tmp_bd);
+            if (i == 0) {
+              board_flip_horizontal(&tmp_bd);
+            }
           }
-          board_flip_horizontal(&tmp_bd);
         }
         if (curr_depth < max_depth) {
           board_put_black(bd, new_pos);
