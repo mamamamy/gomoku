@@ -12,8 +12,8 @@
 #define CENTER_POSITION 112
 #define TEST_BLACK_RANGE 3
 #define THREAD_COUNT 20
-#define INITIAL_DEPTH 5
-#define LOAD_FROM_FILE_ID 1
+#define INITIAL_DEPTH 7
+#define LOAD_FROM_FILE_ID 0
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #define min(a, b) ((a) < (b) ? (a) : (b))
@@ -81,7 +81,8 @@ static int test_white(test_context *tc, int curr_depth, int max_depth) {
       board_remove_white(tc->bd, pos);
       return pos;
     }
-    if (vct(tc->bd) != -1) {
+    // VCT is only used on the last layer of the white pieces
+    if (curr_depth == max_depth - 1 && vct(tc->bd) != -1) {
       board_remove_white(tc->bd, pos);
       continue;
     }
