@@ -11,7 +11,7 @@
 
 #define CENTER_POSITION 112
 #define TEST_BLACK_RANGE 3
-#define THREAD_COUNT 16
+#define THREAD_COUNT 20
 #define INITIAL_DEPTH 5
 #define LOAD_FROM_FILE_ID 1
 
@@ -56,50 +56,58 @@ static int find_win_pos(wtree *wt, board bd) {
   return -1;
 }
 
-static int test_white(wtree *wt, board *bd, int curr_depth, int max_depth);
-static int test_black(wtree *wt, board *bd, int curr_depth, int max_depth);
+typedef struct test_context test_context;
 
-static int test_white(wtree *wt, board *bd, int curr_depth, int max_depth) {
+struct test_context {
+  wtree *wt;
+  board *bd;
+  spinlock save_file_lock;
+};
+
+static int test_white(test_context *tc, int curr_depth, int max_depth);
+static int test_black(test_context *tc, int curr_depth, int max_depth);
+
+static int test_white(test_context *tc, int curr_depth, int max_depth) {
   for (int pos = 0; pos < BOARD_SIZE * BOARD_SIZE; ++pos) {
-    if (board_has_piece(bd, pos)) {
+    if (board_has_piece(tc->bd, pos)) {
       continue;
     }
-    board_put_white(bd, pos);
-    if (find_win_pos(wt, *bd) != -1) {
-      board_remove_white(bd, pos);
+    board_put_white(tc->bd, pos);
+    if (find_win_pos(tc->wt, *tc->bd) != -1) {
+      board_remove_white(tc->bd, pos);
       continue;
     }
-    if (vct_check_pattern(bd, pos) & VCT_PATTERN_FIVE_IN_A_ROW) {
-      board_remove_white(bd, pos);
+    if (vct_check_pattern(tc->bd, pos) & VCT_PATTERN_FIVE_IN_A_ROW) {
+      board_remove_white(tc->bd, pos);
       return pos;
     }
-    if (vct(bd) != -1) {
-      board_remove_white(bd, pos);
+    if (vct(tc->bd) != -1) {
+      board_remove_white(tc->bd, pos);
       continue;
     }
-    if (test_black(wt, bd, curr_depth + 1, max_depth) == -1) {
-      board_remove_white(bd, pos);
+    if (test_black(tc, curr_depth + 1, max_depth) == -1) {
+      board_remove_white(tc->bd, pos);
       return pos;
     }
-    board_remove_white(bd, pos);
+    board_remove_white(tc->bd, pos);
   }
   return -1;
 }
 
-static int test_black(wtree *wt, board *bd, int curr_depth, int max_depth) {
+static int test_black(test_context *tc, int curr_depth, int max_depth) {
   if (curr_depth >= max_depth) {
     return -1;
   }
   bitmap256 checked;
   bitmap256_init(&checked);
-  uint64_t prev_wtree_size = wtree_size(wt);
-  int result = find_win_pos(wt, *bd);
+  uint64_t prev_wtree_size = wtree_size(tc->wt);
+  int result = find_win_pos(tc->wt, *tc->bd);
   if (result != -1) {
     return result;
   }
   for (int i = 0; i < BOARD_SIZE * BOARD_SIZE; ++i) {
     int pos = POS_ORDER[i];
-    if (!board_has_piece(bd, pos)) {
+    if (!board_has_piece(tc->bd, pos)) {
       continue;
     }
     int x, y;
@@ -115,23 +123,28 @@ static int test_black(wtree *wt, board *bd, int curr_depth, int max_depth) {
           continue;
         }
         bitmap256_set(&checked, new_pos);
-        if (board_has_piece(bd, new_pos)) {
+        if (board_has_piece(tc->bd, new_pos)) {
           continue;
         }
         // Only check for duplicates when the wtree size changes
-        if (wtree_size(wt) > prev_wtree_size) {
-          prev_wtree_size = wtree_size(wt);
-          int result = find_win_pos(wt, *bd);
+        if (wtree_size(tc->wt) > prev_wtree_size) {
+          prev_wtree_size = wtree_size(tc->wt);
+          int result = find_win_pos(tc->wt, *tc->bd);
           if (result != -1) {
             return result;
           }
         }
-        board_put_black(bd, new_pos);
-        int result = test_white(wt, bd, curr_depth + 1, max_depth);
-        board_remove_black(bd, new_pos);
+        board_put_black(tc->bd, new_pos);
+        int result = test_white(tc, curr_depth + 1, max_depth);
+        board_remove_black(tc->bd, new_pos);
         if (result == -1) {
-          wtree_insert(wt, bd, new_pos);
-          printf("Found a winning node\nWin tree size: %"PRIu64"\n", wtree_size(wt));
+          wtree_insert(tc->wt, tc->bd, new_pos);
+          uint64_t wt_size = wtree_size(tc->wt);
+          printf("Found a winning node\nWin tree size: %"PRIu64"\n", wt_size);
+          spinlock_lock(&tc->save_file_lock);
+          save_to_file(tc->wt, wt_size);
+          spinlock_unlock(&tc->save_file_lock);
+          printf("Save to file wtree_%"PRIu64"\n", wt_size);
           return new_pos;
         }
       }
@@ -151,7 +164,11 @@ struct thread_arg {
 
 void *thread_func(void *arg) {
   thread_arg *ta = (thread_arg *)arg;
-  test_black(ta->wt, ta->bd, 3, ta->max_depth);
+  test_context tc;
+  tc.wt = ta->wt;
+  tc.bd = ta->bd;
+  spinlock_init(&tc.save_file_lock);
+  test_black(&tc, 3, ta->max_depth);
   printf("Thread %d down\n", ta->id);
   return NULL;
 }
@@ -179,8 +196,8 @@ void main_while() {
       unsorted_pos[i] = unsorted_pos[random_i];
       unsorted_pos[random_i] = tmp;
     }
+    printf("Current max depth: %d\n", iter_depth);
     for (int pos = 0; pos < BOARD_SIZE * BOARD_SIZE;) {
-      printf("Current max depth: %d\n", iter_depth);
       int thread_num = 0;
       for (int i = 0; i < THREAD_COUNT && pos < BOARD_SIZE * BOARD_SIZE; ++i, ++pos) {
         if (unsorted_pos[i] == CENTER_POSITION) {
@@ -201,9 +218,6 @@ void main_while() {
       for (int i = 0; i < thread_num; ++i) {
         pthread_join(threads[i], NULL);
       }
-      printf("Win tree size: %"PRIu64"\n", wtree_size(&wt));
-      printf("Save to file wtree_%d.bin\n", iter_depth);
-      save_to_file(&wt, iter_depth);
     }
   }
   wtree_free(&wt);
