@@ -90,7 +90,6 @@ void save_to_file(wtree *wt, uint64_t id) {
 }
 
 void load_from_file(wtree *wt, uint64_t id) {
-  wtree_clear(wt);
   char filename[WTREE_FILE_PATH_MAX_LEN];
   snprintf(filename, WTREE_FILE_PATH_MAX_LEN, WTREE_FILE_PATH, id);
   FILE* f = fopen(filename, "rb");
