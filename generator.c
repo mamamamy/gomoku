@@ -12,11 +12,29 @@
 #define CENTER_POSITION 112
 #define TEST_BLACK_RANGE 3
 #define THREAD_COUNT 16
-#define INITIAL_DEPTH 3
+#define INITIAL_DEPTH 5
 #define LOAD_FROM_FILE_ID 1
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #define min(a, b) ((a) < (b) ? (a) : (b))
+
+static const int POS_ORDER[BOARD_SIZE * BOARD_SIZE] = {
+  112, 96, 97, 98, 111, 113, 126, 127, 128, 80, 81, 82, 83, 84, 95,
+  99, 110, 114, 125, 129, 140, 141, 142, 143, 144, 64, 65, 66, 67, 68,
+  69, 70, 79, 85, 94, 100, 109, 115, 124, 130, 139, 145, 154, 155, 156,
+  157, 158, 159, 160, 48, 49, 50, 51, 52, 53, 54, 55, 56, 63, 71,
+  78, 86, 93, 101, 108, 116, 123, 131, 138, 146, 153, 161, 168, 169, 170,
+  171, 172, 173, 174, 175, 176, 32, 33, 34, 35, 36, 37, 38, 39, 40,
+  41, 42, 47, 57, 62, 72, 77, 87, 92, 102, 107, 117, 122, 132, 137,
+  147, 152, 162, 167, 177, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191,
+  192, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 31,
+  43, 46, 58, 61, 73, 76, 88, 91, 103, 106, 118, 121, 133, 136, 148,
+  151, 163, 166, 178, 181, 193, 196, 197, 198, 199, 200, 201, 202, 203, 204,
+  205, 206, 207, 208, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+  11, 12, 13, 14, 15, 29, 30, 44, 45, 59, 60, 74, 75, 89, 90,
+  104, 105, 119, 120, 134, 135, 149, 150, 164, 165, 179, 180, 194, 195, 209,
+  210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224
+};
 
 static int find_win_pos(wtree *wt, board bd) {
   for (int i = 0; i < 2; ++i) {
@@ -25,11 +43,15 @@ static int find_win_pos(wtree *wt, board bd) {
       if (result != -1) {
         return result;
       }
+      if (i == 1 && j == 3) {
+        break;
+      }
       board_rotate_clockwise_90(&bd);
     }
-    if (i == 0) {
-      board_flip_horizontal(&bd);
+    if (i == 1) {
+      break;
     }
+    board_flip_horizontal(&bd);
   }
   return -1;
 }
@@ -65,23 +87,18 @@ static int test_white(wtree *wt, board *bd, int curr_depth, int max_depth) {
 }
 
 static int test_black(wtree *wt, board *bd, int curr_depth, int max_depth) {
+  if (curr_depth >= max_depth) {
+    return -1;
+  }
   bitmap256 checked;
   bitmap256_init(&checked);
   uint64_t prev_wtree_size = wtree_size(wt);
-  board tmp_bd = *bd;
-  for (int i = 0; i < 2; ++i) {
-    for (int j = 0; j < 4; ++j) {
-      int result = wtree_find(wt, &tmp_bd);
-      if (result != -1) {
-        return result;
-      }
-      board_rotate_clockwise_90(&tmp_bd);
-    }
-    if (i == 0) {
-      board_flip_horizontal(&tmp_bd);
-    }
+  int result = find_win_pos(wt, *bd);
+  if (result != -1) {
+    return result;
   }
-  for (int pos = 0; pos < BOARD_SIZE * BOARD_SIZE; ++pos) {
+  for (int i = 0; i < BOARD_SIZE * BOARD_SIZE; ++i) {
+    int pos = POS_ORDER[i];
     if (!board_has_piece(bd, pos)) {
       continue;
     }
@@ -109,15 +126,13 @@ static int test_black(wtree *wt, board *bd, int curr_depth, int max_depth) {
             return result;
           }
         }
-        if (curr_depth < max_depth) {
-          board_put_black(bd, new_pos);
-          int result = test_white(wt, bd, curr_depth + 1, max_depth);
-          board_remove_black(bd, new_pos);
-          if (result == -1) {
-            wtree_insert(wt, bd, new_pos);
-            printf("Found a winning node\nWin tree size: %"PRIu64"\n", wtree_size(wt));
-            return new_pos;
-          }
+        board_put_black(bd, new_pos);
+        int result = test_white(wt, bd, curr_depth + 1, max_depth);
+        board_remove_black(bd, new_pos);
+        if (result == -1) {
+          wtree_insert(wt, bd, new_pos);
+          printf("Found a winning node\nWin tree size: %"PRIu64"\n", wtree_size(wt));
+          return new_pos;
         }
       }
     }

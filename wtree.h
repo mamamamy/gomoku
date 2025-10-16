@@ -2,8 +2,7 @@
 #define WTREE_H
 
 #include "board.h"
-
-#include <pthread.h>
+#include "rwlock.h"
 
 typedef struct wtree wtree;
 typedef struct wtree_entry wtree_entry;
@@ -19,7 +18,7 @@ struct wtree {
   wtree_entry **buckets;
   uint64_t item_num;
   uint64_t bucket_num;
-  pthread_rwlock_t lock;
+  rwlock lock;
 };
 
 void wtree_init(wtree *wt);
