@@ -5,7 +5,7 @@
 #define WTREE_BUCKET_NUM 16
 
 static void wtree_resize(wtree *wt) {
-  uint64_t new_bucket_num = wt->bucket_num << 1;
+  uint64_t new_bucket_num = wt->bucket_num * 2;
   wtree_entry **new_buckets = malloc(sizeof(*new_buckets) * new_bucket_num);
   for (uint64_t i = 0; i < new_bucket_num; ++i) {
     new_buckets[i] = NULL;
