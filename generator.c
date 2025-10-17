@@ -179,6 +179,7 @@ void main_while() {
   wtree wt;
   wtree_init(&wt);
   // load_from_file(&wt, LOAD_FROM_FILE_ID);
+  // printf("Win tree size: %"PRIu64"\n", wtree_size(&wt));
   board bd;
   board_init(&bd);
   wtree_insert(&wt, &bd, CENTER_POSITION);
