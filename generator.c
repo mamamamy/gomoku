@@ -3,6 +3,7 @@
 #include "wtree.h"
 #include "save.h"
 #include "bitmap256.h"
+#include "config.h"
 
 #include <stdio.h>
 #include <inttypes.h>
@@ -11,9 +12,9 @@
 
 #define CENTER_POSITION 112
 #define TEST_BLACK_RANGE 3
-#define THREAD_COUNT 20
-#define INITIAL_DEPTH 7
-#define LOAD_FROM_FILE_ID 0
+// #define THREAD_COUNT 20
+// #define INITIAL_DEPTH 7
+// #define LOAD_FROM_FILE_ID 0
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #define min(a, b) ((a) < (b) ? (a) : (b))
@@ -176,22 +177,24 @@ void *thread_func(void *arg) {
 
 void main_while() {
   printf("Build started\n");
+  config cfg;
+  load_config(&cfg, "config.json");
   wtree wt;
   wtree_init(&wt);
-  // load_from_file(&wt, LOAD_FROM_FILE_ID);
-  // printf("Win tree size: %"PRIu64"\n", wtree_size(&wt));
+  load_from_file(&wt, cfg.load_form_file_id);
+  printf("Win tree size: %"PRIu64"\n", wtree_size(&wt));
   board bd;
   board_init(&bd);
   wtree_insert(&wt, &bd, CENTER_POSITION);
-  pthread_t threads[THREAD_COUNT];
-  board boards[THREAD_COUNT];
-  thread_arg args[THREAD_COUNT];
+  pthread_t threads[cfg.thread_count];
+  board boards[cfg.thread_count];
+  thread_arg args[cfg.thread_count];
   int unsorted_pos[BOARD_SIZE * BOARD_SIZE];
   for (int i = 0; i < BOARD_SIZE * BOARD_SIZE; ++i) {
     unsorted_pos[i] = i;
   }
   srand(time(NULL));
-  for (int iter_depth = INITIAL_DEPTH; iter_depth <= BOARD_SIZE * BOARD_SIZE; iter_depth += 2) {
+  for (int iter_depth = cfg.initial_depth; iter_depth <= BOARD_SIZE * BOARD_SIZE; iter_depth += 2) {
     for (int i = 0; i < BOARD_SIZE * BOARD_SIZE; ++i) {
       int random_i = rand() % (BOARD_SIZE * BOARD_SIZE);
       int tmp = unsorted_pos[i];
@@ -201,7 +204,7 @@ void main_while() {
     printf("Current max depth: %d\n", iter_depth);
     for (int pos = 0; pos < BOARD_SIZE * BOARD_SIZE;) {
       int thread_num = 0;
-      for (int i = 0; i < THREAD_COUNT && pos < BOARD_SIZE * BOARD_SIZE; ++i, ++pos) {
+      for (int i = 0; i < cfg.thread_count && pos < BOARD_SIZE * BOARD_SIZE; ++i, ++pos) {
         if (unsorted_pos[i] == CENTER_POSITION) {
           continue;
         }
